@@ -6,6 +6,7 @@ DB_PATH = os.path.join(BASE_DIR, 'access_control.db')
 
 #role manager,user,admin
 #access_logs，users，attendance_summary
+
 #region
 def init_db():
     """
@@ -334,15 +335,6 @@ def delete_access_log(log_id):
         conn.close()
 
 def get_user_by_card_id(card_id):
-    """
-    通过卡牌ID查找用户信息
-    
-    Args:
-        card_id (str): 卡牌ID
-    
-    Returns:
-        dict: 用户信息，如果未找到则返回None
-    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -362,27 +354,13 @@ def get_user_by_card_id(card_id):
         return None
 
 def add_access_log(user_id, timestamp, card_id):
-    """
-    アクセスログを追加します。
-    """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO access_logs (user_id, timestamp, card_id) VALUES (?, ?, ?)', (user_id, timestamp, card_id))
+    conn.commit()
+    conn.close()
 
 def add_user(name, role, card_id, card_name, register_date=None):
-    """
-    ユーザーを追加します。
-    
-    Args:
-        name (str): ユーザー名
-        role (str): ユーザー角色
-        card_id (str): 卡牌ID
-        card_name (str): 卡牌名称
-        register_date (str): 注册日期，如果为None则使用当前时间
-    
-    Returns:
-        dict: 添加的用户信息
-    """
     if register_date is None:
         from datetime import datetime
         register_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -101,8 +101,8 @@
                     <th>ユーザーID</th>
                     <th>ユーザー名</th>
                     <th>勤務日</th>
-                    <th>最早打卡時間</th>
-                    <th>最遅打卡時間</th>
+                    <th>最早時間</th>
+                    <th>最遅時間</th>
                 </tr>
             </thead>
             <tbody id="summaryTableBody">
@@ -126,7 +126,7 @@
         
         async function loadSummaryData() {
             try {
-                const response = await fetch(`${API_BASE}/attendance_summary`);
+                const response = await fetch(`${API_BASE}/attend`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

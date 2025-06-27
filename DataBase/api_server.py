@@ -5,6 +5,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from enum import Enum
 import DB
+from datetime import datetime
+
 class Status(Enum):
     ADMIN = "admin"            
     USER = "user"
@@ -132,6 +134,7 @@ def api_card_lookup():
         logger.error(f"カード検索に失敗: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+#region delete
 @app.route('/api/attend/delete_attend_record', methods=['DELETE'])
 def delete_attend_record():
     """特定の出勤記録を削除"""
@@ -205,6 +208,7 @@ def delete_access_log_api():
     except Exception as e:
         logger.error(f"出勤記録削除に失敗: {str(e)}")
         return jsonify({'error': str(e)}), 500
+#endregion
 
 @app.route('/api/logs/add_access_log', methods=['POST'])
 def add_access_log_api():
@@ -272,12 +276,16 @@ def check_card_api():
         user = DB.get_user_by_card_id(card_id)
         if user:
             logger.info(f"ユーザー確認成功: {user}")
+            #開錠指令送る
             result = subprocess.run(
-                ["node", "sesami.js"],  # 如果需要传参数可加在后面
+                ["node", "sesami.js"],  
                 capture_output=True,
                 text=True,
                 check=True
-            ) 
+            )
+            timestamp = datetime.now()
+            DB.add_access_log(user['id'], timestamp, card_id)
+            logger.info(f"出勤記録追加: {user}"+str(timestamp))
             return jsonify({'message': 'ユーザーが見つかりました', 'user': user})
 
         else:
@@ -299,7 +307,7 @@ if __name__ == '__main__':
         
         logs = DB.get_access_logs()
         logger.info(f"現在の出勤記録数: {len(logs)}")
-        
+        logger.info(f"現在の出勤記録数: {logs}")
         summary = DB.get_attendance_summary()
         logger.info(f"現在の出勤サマリー記録数: {len(summary)}")
         

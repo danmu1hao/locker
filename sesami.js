@@ -21,13 +21,8 @@ let wm2_cmd = async () => {
 }
 
 function generateRandomTag(secret) {
-  // * key:key-secret_hex to data
   let key = Buffer.from(secret, 'hex')
 
-  // message
-  // 1. timestamp  (SECONDS SINCE JAN 01 1970. (UTC))  // 1621854456905
-  // 2. timestamp to uint32  (little endian)   //f888ab60
-  // 3. remove most-significant byte    //0x88ab60
   const date = Math.floor(Date.now() / 1000)
   const dateDate = Buffer.allocUnsafe(4)
   dateDate.writeUInt32LE(date)
