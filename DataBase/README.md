@@ -5,7 +5,7 @@
 ## 機能
 
 - ユーザー情報の管理
-- アクセスログ（打卡記録）の管理
+- アクセスログ（打刻記録）の管理
 - 日別出勤汇总データの自動生成
 - Webインターフェースでのデータ表示
 
@@ -38,8 +38,8 @@ python api_server.py
 ### APIエンドポイント
 
 - `GET /api/users` - ユーザー情報を取得
-- `GET /api/access_logs` - アクセスログを取得
-- `GET /api/attendance_summary` - 出勤汇总データを取得
+- `GET /api/logs` - アクセスログ（打刻記録）を取得
+- `GET /api/attend` - 出勤汇总データを取得
 - `POST /api/update_summary` - 出勤汇总データを更新
 
 ### フロントエンド
@@ -59,15 +59,15 @@ python api_server.py
 ### access_logs テーブル
 - id: ログID（主キー）
 - user_id: ユーザーID（外部キー）
-- timestamp: 打卡時間
+- timestamp: 打刻時間
 - card_id: カードID
 
 ### attendance_summary テーブル
 - user_id: ユーザーID（複合主キー）
 - user_name: ユーザー名
 - work_date: 勤務日（複合主キー）
-- earliest_time: 最早打卡時間
-- latest_time: 最遅打卡時間
+- earliest_time: 最早打刻時間
+- latest_time: 最遅打刻時間
 
 ## 注意事項
 
