@@ -22,8 +22,8 @@ def init_db():
     # users表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
+        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_name TEXT NOT NULL,
         role TEXT,
         card_name TEXT,
         card_id TEXT,
@@ -37,7 +37,7 @@ def init_db():
         user_id INTEGER,
         timestamp TEXT,
         card_id TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
     );
     ''')
     # attendance_summary表
@@ -49,7 +49,7 @@ def init_db():
         earliest_time TEXT,
         latest_time TEXT,
         PRIMARY KEY (user_id, work_date),
-        FOREIGN KEY (user_id) REFERENCES users(id)
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
     )
     ''')
     conn.commit()
@@ -62,9 +62,9 @@ def insert_sample_data():
     """
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO users (name, role, card_id, card_name, register_date) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute("INSERT INTO users (user_name, role, card_id, card_name, register_date) VALUES (?, ?, ?, ?, ?)",
                    ("山田太郎", "管理者", "123456", "山田太郎_suica", "2024-06-01 10:00:00"))
-    cursor.execute("INSERT INTO users (name, role, card_id, card_name, register_date) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute("INSERT INTO users (user_name, role, card_id, card_name, register_date) VALUES (?, ?, ?, ?, ?)",
                    ("佐藤花子", "一般", "654321", "佐藤花子_pasmo", "2024-06-02 11:00:00"))
     # 正常打卡日：6月10日（周一）
     cursor.execute("INSERT INTO access_logs (user_id, timestamp, card_id) VALUES (?, ?, ?)", (1, "2024-06-10 08:00:00", "ABC123"))
@@ -152,12 +152,12 @@ def update_attendance_summary():
     cursor.execute('''
     SELECT 
         al.user_id,
-        u.name as user_name,
+        u.user_name,
         DATE(al.timestamp) as work_date,
         MIN(TIME(al.timestamp)) as earliest_time,
         MAX(TIME(al.timestamp)) as latest_time
     FROM access_logs al
-    JOIN users u ON al.user_id = u.id
+    JOIN users u ON al.user_id = u.user_id
     GROUP BY al.user_id, DATE(al.timestamp)
     ORDER BY al.user_id, work_date
     ''')
@@ -250,7 +250,7 @@ def delete_user(user_id):
     
     try:
         # 削除前にユーザー情報を取得
-        cursor.execute('SELECT id, name, role, card_id, card_name, register_date FROM users WHERE id = ?', (user_id,))
+        cursor.execute('SELECT user_id, user_name, role, card_id, card_name, register_date FROM users WHERE user_id = ?', (user_id,))
         user = cursor.fetchone()
         if not user:
             raise Exception(f"指定されたユーザーが見つかりません: ユーザーID={user_id}")
@@ -264,13 +264,13 @@ def delete_user(user_id):
         deleted_summary_count = cursor.rowcount
         
         # ユーザーを削除
-        cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        cursor.execute('DELETE FROM users WHERE user_id = ?', (user_id,))
         
         conn.commit()
         
         deleted_user = {
-            'id': user[0],
-            'name': user[1],
+            'user_id': user[0],
+            'user_name': user[1],
             'role': user[2],
             'card_id': user[3],
             'card_name': user[4],
@@ -303,9 +303,9 @@ def delete_access_log(log_id):
     try:
         # 削除前にログ情報を取得
         cursor.execute('''
-        SELECT al.id, al.user_id, u.name as user_name, al.timestamp, al.card_id
+        SELECT al.id, al.user_id, u.user_name as user_name, al.timestamp, al.card_id
         FROM access_logs al
-        JOIN users u ON al.user_id = u.id
+        JOIN users u ON al.user_id = u.user_id
         WHERE al.id = ?
         ''', (log_id,))
         
@@ -340,7 +340,7 @@ def get_user_by_card_id(card_id):
     cursor = conn.cursor()
     
     cursor.execute('''
-    SELECT id, name, role, card_id, card_name, register_date 
+    SELECT user_id, user_name, role, card_id, card_name, register_date 
     FROM users 
     WHERE card_id = ?
     ''', (card_id,))
@@ -370,7 +370,7 @@ def add_user(name, role, card_id, card_name, register_date=None):
     
     try:
         cursor.execute('''
-        INSERT INTO users (name, role, card_id, card_name, register_date) 
+        INSERT INTO users (user_name, role, card_id, card_name, register_date) 
         VALUES (?, ?, ?, ?, ?)
         ''', (name, role, card_id, card_name, register_date))
         
@@ -379,8 +379,8 @@ def add_user(name, role, card_id, card_name, register_date=None):
         
         # 返回添加的用户信息
         added_user = {
-            'id': user_id,
-            'name': name,
+            'user_id': user_id,
+            'user_name': name,
             'role': role,
             'card_id': card_id,
             'card_name': card_name,
@@ -414,4 +414,4 @@ if __name__ == '__main__':
     update_attendance_summary()
     print("ユーザー:", get_users())
     print("アクセスログ:", get_access_logs())
-    print("出勤汇总:", get_attendance_summary())
+    print("出勤汇总:", get_attendance_summary()[0]["user_id"])
